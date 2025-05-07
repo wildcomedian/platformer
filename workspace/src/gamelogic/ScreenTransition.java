@@ -25,7 +25,7 @@ public class ScreenTransition {
 
 	private String text[];
 	private Rectangle textBox[];
-	private Font font = new Font("Arial", Font.BOLD, Main.SCREEN_WIDTH/4);
+	private Font font = new Font("Arial", Font.BOLD, Main.SCREEN_WIDTH/10);
 
 	private List<ScreenTransitionListener> listeners = new ArrayList<>();
 
@@ -37,8 +37,8 @@ public class ScreenTransition {
 		text = new String[2];
 
 		textBox = new Rectangle[2];
-		textBox[0] = new Rectangle(0, MyWindow.getInsetY()+20, Main.SCREEN_WIDTH, 200);
-		textBox[1] = new Rectangle(0, Main.SCREEN_HEIGHT/2, Main.SCREEN_WIDTH, 200);
+		textBox[0] = new Rectangle(MyWindow.getInsetX(), MyWindow.getInsetY()+20, Main.SCREEN_WIDTH, 200);
+		textBox[1] = new Rectangle(MyWindow.getInsetX(), Main.SCREEN_HEIGHT/2, Main.SCREEN_WIDTH, 200);
 	}
 
 	public void update(float tslf) {
