@@ -1,6 +1,7 @@
 package gamelogic.level;
 
 import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -196,8 +197,74 @@ public class Level {
 	//#############################################################################################################
 	//Your code goes here! 
 	//Please make sure you read the rubric/directions carefully and implement the solution recursively!
+
+	//Precondition: 0 <= row < map.getHeight() and 0 <= col < map.getWidth() and 0 <= fullness <= 3
+	//Postcondtion: Produces a water block with a different image depending on its fullness
 	private void water(int col, int row, Map map, int fullness) {
-		
+		//make water (You’ll need modify this to make different kinds of water such as half water and quarter water)
+		String waterImgName = "Full_water";
+		if (fullness == 0) {
+			waterImgName = "Falling_water";
+		}
+		else if (fullness == 1) {
+			waterImgName = "Quarter_water";
+		}
+		else if (fullness == 2) {
+			waterImgName = "Half_water";
+		}
+
+	 	Water w = new Water (col, row, tileSize, tileset.getImage(waterImgName), this, fullness);
+		map.addTile(col, row, w);
+
+        //check if we can go down
+		//down
+	    if((row+1 < map.getHeight()) && !(map.getTiles()[col][row+1] instanceof Water) && !(map.getTiles()[col][row+1].isSolid()) ) { 
+		//Checks if the tile below is not out of the map, block below is not water or solid 
+
+				if (row+2 < map.getHeight() && (map.getTiles()[col][row+2].isSolid())) {
+				//Checks if it is about to fall on a full block
+					water(col, row+1, map, 3); //If so make a full water block
+				}
+				else {
+					water(col, row+1, map, 0); //if not just keep on making falling water
+				}
+		}
+
+                       //if we can’t go down go left and right.
+		//right
+		if(col+1 < map.getTiles().length && row+1 < map.getHeight() && !(map.getTiles()[col+1][row] instanceof Water) ) {
+		//checks if it will flow out of map (right/bottom) and that the block below it is not water
+
+			if (!(map.getTiles()[col+1][row].isSolid()) && (map.getTiles()[col][row+1].isSolid())) {
+			//checks that block to the right is not a solid and that the block below it is solid
+
+				if (fullness == 3) { //Checks if current block is a full water block 
+					water(col+1, row, map, 2); //If so flow into a half block
+				}
+				else { //Checks if current block is quarter or half 
+					water(col+1, row, map, 1); // If so then just flow into a quarter block
+				}
+
+			}
+
+		}
+
+		//left
+		if(col-1 >= 0 && row+1 < map.getHeight() && !(map.getTiles()[col-1][row] instanceof Water) ) {
+		//checks if it will flow out of map (left/bottom) and that the block below it is not water
+
+			if (!(map.getTiles()[col-1][row].isSolid()) && (map.getTiles()[col][row+1].isSolid())) {
+			//checks that block to the left is not solid and that the block below it is solid
+
+				if (fullness == 3) { //Checks if current block is a full water block 
+					water(col-1, row, map, 2); //If so flow into a half block
+				}
+				else { //Checks if current block is quarter or half 
+					water(col-1, row, map, 1); // If so then just flow into a quarter block
+				}
+
+			}
+		}
 	}
 
 
