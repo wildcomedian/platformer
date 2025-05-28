@@ -170,8 +170,8 @@ public class Level {
 				if (flowers.get(i).getHitbox().isIntersecting(player.getHitbox())) {
 					if(flowers.get(i).getType() == 1)
 						water(flowers.get(i).getCol(), flowers.get(i).getRow(), map, 3);
-//					else
-//						addGas(flowers.get(i).getCol(), flowers.get(i).getRow(), map, 20, new ArrayList<Gas>());
+					else
+						addGas(flowers.get(i).getCol(), flowers.get(i).getRow(), map, 20, new ArrayList<Gas>());
 					flowers.remove(i);
 					i--;
 				}
@@ -193,6 +193,48 @@ public class Level {
 		}
 	}
 	
+	//Pre-condition: numSquaresToFill must be a positive non-zero integer
+	//Post-condition: Gas tiles will be created from the col/row parameter until the requisite number of squares are filled or there is no more room
+	private void addGas(int col, int row, Map map, int numSquaresToFill, ArrayList<Gas> placedThisRound) {
+		Gas garyPrime = new Gas(col, row, tileSize, tileset.getImage("GasOne"), this, 0); //Creates initial gas block 
+		map.addTile(col, row, garyPrime); //Adds the gas block to the map
+		placedThisRound.add(garyPrime); //Adds the gass block to the array to keep track of it
+		int index = 0; //Represents index in placedThisRound
+
+		while ((placedThisRound.size() < numSquaresToFill) && (index < placedThisRound.size()) ) { //while the number of gas blocks placed is less than numSquaresToFill or we've gone through the entire list without placing anymore blocks
+
+			//Sets new starting row/col
+			Gas startingPointGas = placedThisRound.get(index);
+			col = startingPointGas.getCol();
+			row = startingPointGas.getRow();
+
+			//Placing gas blocks around new starting point
+			for (int addRow = -1; addRow <= 1; addRow++) {
+				for (int addCol = 0; addCol >= -1 ; addCol-=2) {
+
+					if ( (0 <= col + addCol) && (col + addCol < map.getWidth()) && (0 <= row + addRow) && (row + addRow < map.getHeight()) ) { //Will I place a gas block out of bounds? If not continue
+						if (!(map.getTiles()[col + addCol][row + addRow] instanceof Gas) && !(map.getTiles()[col + addCol][row + addRow].isSolid()) ) { //Am I about to place a gas block where their is a gas block or a solid? If yes continue
+							if (placedThisRound.size() < numSquaresToFill) { //checks if were over the number of tiles to be filled with gas
+								//Creates gas block
+								Gas gary = new Gas(col + addCol, row + addRow, tileSize, tileset.getImage("GasOne"), this, 0);
+								map.addTile(col + addCol, row + addRow, gary);
+								placedThisRound.add(gary);
+							}
+						}
+					}
+					//To make sure we loop through addCol values correctly
+					if (addCol == 0) {
+						addCol = 3;
+					}
+				}
+			}
+			index++;
+
+
+		}
+
+	}
+
 	
 	//#############################################################################################################
 	//Your code goes here! 
@@ -270,33 +312,64 @@ public class Level {
 
 
 	public void draw(Graphics g) {
-		g.translate((int) -camera.getX(), (int) -camera.getY());
+	   	 g.translate((int) -camera.getX(), (int) -camera.getY());
+	   	 // Draw the map
+	   	 for (int x = 0; x < map.getWidth(); x++) {
+	   		 for (int y = 0; y < map.getHeight(); y++) {
+	   			 Tile tile = map.getTiles()[x][y];
+	   			 if (tile == null)
+	   				 continue;
+	   			 if(tile instanceof Gas) {
+	   				
+	   				 int adjacencyCount =0;
+	   				 for(int i=-1; i<2; i++) {
+	   					 for(int j =-1; j<2; j++) {
+	   						 if(j!=0 || i!=0) {
+	   							 if((x+i)>=0 && (x+i)<map.getTiles().length && (y+j)>=0 && (y+j)<map.getTiles()[x].length) {
+	   								 if(map.getTiles()[x+i][y+j] instanceof Gas) {
+	   									 adjacencyCount++;
+	   								 }
+	   							 }
+	   						 }
+	   					 }
+	   				 }
+	   				 if(adjacencyCount == 8) {
+	   					 ((Gas)(tile)).setIntensity(2);
+	   					 tile.setImage(tileset.getImage("GasThree"));
+	   				 }
+	   				 else if(adjacencyCount >5) {
+	   					 ((Gas)(tile)).setIntensity(1);
+	   					tile.setImage(tileset.getImage("GasTwo"));
+	   				 }
+	   				 else {
+	   					 ((Gas)(tile)).setIntensity(0);
+	   					tile.setImage(tileset.getImage("GasOne"));
+	   				 }
+	   			 }
+	   			 if (camera.isVisibleOnCamera(tile.getX(), tile.getY(), tile.getSize(), tile.getSize()))
+	   				 tile.draw(g);
+	   		 }
+	   	 }
 
-		// Draw the map
-		for (int x = 0; x < map.getWidth(); x++) {
-			for (int y = 0; y < map.getHeight(); y++) {
-				Tile tile = map.getTiles()[x][y];
-				if (tile == null)
-					continue;
-				if (camera.isVisibleOnCamera(tile.getX(), tile.getY(), tile.getSize(), tile.getSize()))
-					tile.draw(g);
-			}
-		}
 
-		// Draw the enemies
-		for (int i = 0; i < enemies.length; i++) {
-			enemies[i].draw(g);
-		}
+	   	 // Draw the enemies
+	   	 for (int i = 0; i < enemies.length; i++) {
+	   		 enemies[i].draw(g);
+	   	 }
 
-		// Draw the player
-		player.draw(g);
 
-		// used for debugging
-		if (Camera.SHOW_CAMERA)
-			camera.draw(g);
+	   	 // Draw the player
+	   	 player.draw(g);
 
-		g.translate((int) +camera.getX(), (int) +camera.getY());
+
+
+
+	   	 // used for debugging
+	   	 if (Camera.SHOW_CAMERA)
+	   		 camera.draw(g);
+	   	 g.translate((int) +camera.getX(), (int) +camera.getY());
 	}
+
 
 	// --------------------------Die-Listener
 	public void throwPlayerDieEvent() {
